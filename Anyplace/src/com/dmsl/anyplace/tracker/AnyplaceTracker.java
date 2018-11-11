@@ -296,6 +296,8 @@ public class AnyplaceTracker {
 			algoValue = 3;
 		} else if (name.equals("MMSE")) {
 			algoValue = 4;
+		} else if (name.equals("HYBRID")){
+			algoValue = 5;
 		}
 
 		if (algoValue == 0) {

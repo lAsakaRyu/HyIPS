@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
 /*
 * AnyPlace: A free and open Indoor Navigation Service with superb accuracy!
 *
@@ -93,6 +92,7 @@
         <item>Weighted K Nearest Neighbor (WKNN) Algorithm</item>
         <item>Probabilistic Maximum A Posteriori (MAP) Algorithm</item>
         <item>Probabilistic Minimum Mean Square Error (MMSE) Algorithm</item>
+        <item>BLE Beacon enabled divide and conquer (HYBRID) Algorithm</item>
     </string-array>
     <string-array name="AlgorithmsValues">
 
@@ -101,6 +101,7 @@
         <item>WKNN</item>
         <item>MAP</item>
         <item>MMSE</item>
+        <item>HYBRID</item>
     </string-array>
     <string-array name="AlgorithmsDescriptions">
 
@@ -109,6 +110,7 @@
         <item>The WKNN algorithm is a variant of KNN and estimates the unknown user location as the weighted average of K locations which have the shortest Euclidean distances between the currently observed RSS fingerprint and the respective mean value fingerprints in the radiomap. The weight of each location is set equal to the inverse of the distance.</item>
         <item>The MAP algorithm is a probabilistic approach that estimates the unknown user location by maximizing the conditional probability of each location in the radiomap given the currently observed fingerprint (posterior).</item>
         <item>The MMSE algorithm is a probabilistic approach that estimates the unknown user location by calculating the expected value of the location, which is equivalent to the weighted sum of the loations in the radiomap while the weights are set equal to the conditional probability of each location in the radiomap given the currently observed fingerprint (posterior).</item>
+        <item>The HYBRID algorithm utilizes BLE beacons to identify the repetitive combination of RSSI values and attemps to resolve them by choosing the one with higher heuristic value which the current user is belongs to.</item>
     </string-array>
     <string-array name="AlgorithmsNames">
 
@@ -117,6 +119,7 @@
         <item> Weighted K Nearest Neighbor (WKNN)</item>
         <item> Maximum A Posteriori (MAP)</item>
         <item> Minimum Mean Square Error (MMSE)</item>
+        <item> BLE Beacon enabled Algorithm (HYBRID)</item>
     </string-array>
 
 </resources>

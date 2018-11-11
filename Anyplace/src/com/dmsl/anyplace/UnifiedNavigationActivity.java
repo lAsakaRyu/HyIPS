@@ -129,7 +129,6 @@ import com.google.maps.android.clustering.Cluster;
 import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.clustering.ClusterManager.OnClusterClickListener;
 import com.google.maps.android.clustering.ClusterManager.OnClusterItemClickListener;
-
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
@@ -703,6 +702,20 @@ public class UnifiedNavigationActivity extends SherlockFragmentActivity implemen
             @Override
             public boolean onMenuItemClick(MenuItem item) {
                 clearNavigationData();
+                return true;
+            }
+        });
+
+        // ***********************Load Ayplace Architect
+        // ************************************** /
+        final SubMenu subMenuLoadArchitect = menu.addSubMenu("Show Architect");
+        final MenuItem LoadArchitect = subMenuLoadArchitect.getItem();
+        LoadArchitect.setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
+        LoadArchitect.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                Intent intent = new Intent(getApplicationContext(), ArchitectActivity.class);
+                startActivity(intent);
                 return true;
             }
         });
@@ -1956,12 +1969,19 @@ public class UnifiedNavigationActivity extends SherlockFragmentActivity implemen
 
     private void fetchPoisByBuidToCache(final String buid, final FetchPoisByBuidTask.FetchPoisListener l) {
         // Check for cahced pois
-        if (mAnyplaceCache.checkPoisBUID(buid)) {
-            l.onSuccess("Pois read from cache", mAnyplaceCache.getPoisMap());
-        } else {
+//        if (mAnyplaceCache.checkPoisBUID(buid)) {
+//            l.onSuccess("Pois read from cache", mAnyplaceCache.getPoisMap());
+//        } else {
             FetchPoisByBuidTask fetchPoisByBuidFloorTask = new FetchPoisByBuidTask(new FetchPoisByBuidTask.FetchPoisListener() {
                 @Override
                 public void onSuccess(String result, Map<String, PoisModel> poisMap) {
+                    System.out.println(poisMap.toString());
+                    for(Map.Entry<String, PoisModel> entry:poisMap.entrySet()){
+                        if(entry.getValue().pois_type=="Beacon"){
+                            InstanceDataHolder.getInstance().beacons.put(entry.getValue().description,entry.getValue());
+                            //poisMap.remove(entry.getKey());
+                        }
+                    }
                     mAnyplaceCache.setPois(poisMap, buid);
                     l.onSuccess(result, poisMap);
                 }
@@ -1978,7 +1998,7 @@ public class UnifiedNavigationActivity extends SherlockFragmentActivity implemen
             }, this, buid);
 
             fetchPoisByBuidFloorTask.execute();
-        }
+//        }
     }
 
     // </POIS>

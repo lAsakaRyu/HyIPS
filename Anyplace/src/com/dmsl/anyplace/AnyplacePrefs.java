@@ -166,6 +166,9 @@ public class AnyplacePrefs extends PreferenceActivity {
 						case 3:
 							popup_msg(descriptions[3], names[3], 0);
 							break;
+                        case 4:
+                            popup_msg(descriptions[4], names[4], 0);
+                            break;
 						}
 
 					}

@@ -50,11 +50,23 @@ public class PoisModel implements Serializable, IPoisClass {
 	public String floor_number;
 	public String pois_type;
 	public boolean is_building_entrance;
-	
-	public String toString(){
-		return name + "[" + buid + "]";
+
+	@Override
+	public String toString() {
+		return "PoisModel{" +
+				"puid='" + puid + '\'' +
+				", buid='" + buid + '\'' +
+				", name='" + name + '\'' +
+				", description='" + description + '\'' +
+				", lat='" + lat + '\'' +
+				", lng='" + lng + '\'' +
+				", floor_name='" + floor_name + '\'' +
+				", floor_number='" + floor_number + '\'' +
+				", pois_type='" + pois_type + '\'' +
+				", is_building_entrance=" + is_building_entrance +
+				'}'+"\n";
 	}
-	
+
 	@Override
 	public double lat() {
 		return Double.parseDouble(lat);

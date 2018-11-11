@@ -133,7 +133,9 @@ class Test {
 
 		for (int i = 1; i < wifis.length; i++) {
 			double[] wifi = wifis[i];
-			KalmanFilter.Point p = new KalmanFilter.Point(0,0); //= filter.update(wifi[0], wifi[1]);
+			LatLng latLng = filter.update(wifi[0], wifi[1]);
+
+			KalmanFilter.Point p = new KalmanFilter.Point(latLng.latitude,latLng.longitude);
 
 			System.out.println(String.format("V%d: %4.3f. %4.3f", i, p.x, p.y));
 			System.out.println(String.format("V%d: %4.3f. %4.3f", i, kfl[i][0], kfl[i][1]));

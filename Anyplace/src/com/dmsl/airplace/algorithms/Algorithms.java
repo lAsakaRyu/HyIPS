@@ -110,6 +110,8 @@ public class Algorithms {
 			return MAP_MMSE_Algorithm(RM, Observed_RSS_Values, parameter, false);
 		case 4:
 			return MAP_MMSE_Algorithm(RM, Observed_RSS_Values, parameter, true);
+        case 5:
+            return KNN_WKNN_Algorithm(RM, Observed_RSS_Values, parameter, true);
 		}
 		return null;
 
@@ -156,7 +158,7 @@ public class Algorithms {
 
 			LocDistance_Results_List.add(0, new LocDistance(curResult, location));
 		}
-
+        //TODO get latlng location to compare to beacons one.
 		// Sort locations-distances pairs based on minimum distances
 		Collections.sort(LocDistance_Results_List, new Comparator<LocDistance>() {
 

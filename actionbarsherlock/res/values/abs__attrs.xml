@@ -3,7 +3,7 @@
 <resources>
     <attr name="titleTextStyle" format="reference" />
     <attr name="subtitleTextStyle" format="reference" />
-    <attr name="background" format="reference|color" />
+    <!--<attr name="background" format="reference|color" />-->
     <attr name="backgroundSplit" format="reference|color" />
     <attr name="height" format="dimension" />
     <attr name="divider" format="reference" />
@@ -150,8 +150,8 @@
         <attr name="textAppearanceListItemSmall" format="reference" />
 
 
-        <attr name="windowMinWidthMajor" format="dimension" />
-        <attr name="windowMinWidthMinor" format="dimension" />
+        <!--<attr name="windowMinWidthMajor" format="dimension" /> -->
+        <!--<attr name="windowMinWidthMinor" format="dimension" /> -->
 
 
         <!-- Drawable to use for generic vertical dividers. -->
