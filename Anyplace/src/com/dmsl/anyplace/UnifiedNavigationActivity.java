@@ -43,6 +43,10 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.app.SearchManager;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothManager;
+import android.bluetooth.le.BluetoothLeScanner;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -61,9 +65,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import org.jetbrains.annotations.NotNull;
-import android.support.v4.app.ActivityCompat;
+
 import android.support.v4.app.DialogFragment;
-import android.support.v4.content.ContextCompat;
 import android.text.TextPaint;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -85,6 +88,7 @@ import com.actionbarsherlock.widget.SearchView;
 import com.circlegate.tt.cg.an.lib.map.MapWrapperLayout;
 import com.circlegate.tt.cg.an.lib.map.OnInfoWindowElemTouchListener;
 import com.dmsl.anyplace.AnyplacePrefs.Action;
+import com.dmsl.anyplace.ble.ScanInstance;
 import com.dmsl.anyplace.cache.AnyplaceCache;
 import com.dmsl.anyplace.cache.BackgroundFetchListener;
 import com.dmsl.anyplace.floor.Algo1Radiomap;
@@ -132,6 +136,7 @@ import com.google.maps.android.clustering.ClusterManager.OnClusterItemClickListe
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -207,6 +212,13 @@ public class UnifiedNavigationActivity extends SherlockFragmentActivity implemen
 
     private boolean isTrackingErrorBackground;
     private Marker userMarker = null;
+
+    BluetoothManager btManager;
+    BluetoothAdapter btAdapter;
+    BluetoothLeScanner btScanner;
+
+    private final static int REQUEST_ENABLE_BT = 1;
+    private static final int PERMISSION_REQUEST_COARSE_LOCATION = 1;
 
 
     @Override
@@ -448,8 +460,71 @@ public class UnifiedNavigationActivity extends SherlockFragmentActivity implemen
         // handle the search intent
         handleIntent(getIntent());
         requestForPermissions();
+
+        btManager = (BluetoothManager)getSystemService(Context.BLUETOOTH_SERVICE);
+        btAdapter = btManager.getAdapter();
+        btScanner = btAdapter.getBluetoothLeScanner();
+
+        if (btAdapter != null && !btAdapter.isEnabled()) {
+            Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableIntent,REQUEST_ENABLE_BT);
+        }
     }
 
+    private BluetoothAdapter.LeScanCallback leScanCallback =
+            new BluetoothAdapter.LeScanCallback() {
+                @Override
+                public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
+                    for(Map.Entry<PoisModel,ScanInstance> entry : InstanceDataHolder.getInstance().beacons.entrySet()){
+                        if(entry.getKey().description.equals(device.getAddress())){
+                            if(entry.getValue()==null) {
+                                entry.setValue(new ScanInstance(device, rssi, scanRecord));
+                                final int fragmentWidth = (int) (findViewById(R.id.map).getWidth() * 2);
+                                ViewGroup infoWindow = (ViewGroup) getLayoutInflater().inflate(R.layout.info_window, null);
+                                TextView infoSnippet = (TextView) infoWindow.findViewById(R.id.snippet);
+                                TextPaint paint = infoSnippet.getPaint();
+                                String snippet = AndroidUtils.fillTextBox(paint, fragmentWidth, entry.getKey().description);
+                                Marker m2 = mMap.addMarker(new MarkerOptions().position(new LatLng(Double.parseDouble(entry.getKey().lat), Double.parseDouble(entry.getKey().lng))).title(entry.getKey().name).snippet(snippet).icon(BitmapDescriptorFactory.fromResource(R.drawable.pinbeaconon)));
+                                visiblePois.removeMarker(visiblePois.getMarkerFromPoisModel(entry.getKey().puid));
+                                visiblePois.addMarkerAndPoi(m2, entry.getKey());
+                            }
+                            else{
+                                entry.getValue().setRssi(rssi);
+                                entry.getValue().setScanrecord(scanRecord);
+                                entry.getValue().setTimeRecieved(Calendar.getInstance());
+                            }
+                            System.out.println("MAC Address = " + entry.getValue().getBluetoothDevice().getAddress() + " TX Power = " + entry.getValue().getTxPower() + " RSSI = " + entry.getValue().getRssi() + " Distance(m) = " + entry.getValue().getEstimatedDistance()+"m" + " Closest beacon = "+InstanceDataHolder.getInstance().getClosestBeacon().getKey().description);
+                        }
+                    }
+//                    if(device.getAddress().contains("00:A0:50")){
+//                        byte txpw = scanRecord[29];
+//                        double distance = (double)Math.round((Math.pow(10d, ((double) (int)txpw - rssi) / (10 * 2))) * 100) / 100;
+//                        System.out.println("MAC Address = " + device.getAddress() + " TX Power = " + (int)txpw + " RSSI = " + rssi + " Distance(m) = " + distance+"m");
+//                    }
+                }
+
+            };
+    public void startScanning() {
+
+
+        AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+                btAdapter.startLeScan(leScanCallback);
+            }
+        });
+
+    }
+
+    public void stopScanning() {
+
+        AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+                btAdapter.stopLeScan(leScanCallback);
+            }
+        });
+    }
     @TargetApi(Build.VERSION_CODES.M)
     private void requestForPermissions() {
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -564,6 +639,7 @@ public class UnifiedNavigationActivity extends SherlockFragmentActivity implemen
         sensorsStepCounter.resume();
         lpTracker.resumeTracking();
         floorSelector.resumeTracking();
+        startScanning();
     }
 
     @Override
@@ -574,6 +650,7 @@ public class UnifiedNavigationActivity extends SherlockFragmentActivity implemen
         sensorsMain.pause();
         sensorsStepCounter.pause();
         removeTrackerListeners();
+        stopScanning();
     }
 
     @Override
@@ -1466,6 +1543,8 @@ public class UnifiedNavigationActivity extends SherlockFragmentActivity implemen
 
         // clean the map in case there are overlays
         mMap.clear();
+        InstanceDataHolder.getInstance().beacons.clear();
+        System.out.println("BUILDING SELECT.");
 
         // add the Tile Provider that uses our Building tiles over Google Maps
         TileOverlay mTileOverlay = mMap.addTileOverlay(new TileOverlayOptions().tileProvider(new AnyPlaceMapTileProvider(getBaseContext(), b.buid, f.floor_number)));
@@ -1961,7 +2040,13 @@ public class UnifiedNavigationActivity extends SherlockFragmentActivity implemen
         for (PoisModel pm : collection) {
             if (pm.floor_number.equalsIgnoreCase(currentFloor)) {
                 String snippet = AndroidUtils.fillTextBox(paint, fragmentWidth, pm.description);
-                Marker m = mMap.addMarker(new MarkerOptions().position(new LatLng(Double.parseDouble(pm.lat), Double.parseDouble(pm.lng))).title(pm.name).snippet(snippet).icon(BitmapDescriptorFactory.fromResource(R.drawable.pin8)));
+                Marker m;
+                if(pm.pois_type.equals("Beacon")){
+                    m = mMap.addMarker(new MarkerOptions().position(new LatLng(Double.parseDouble(pm.lat), Double.parseDouble(pm.lng))).title(pm.name).snippet(snippet).icon(BitmapDescriptorFactory.fromResource(R.drawable.pinbeaconoff)));
+                }
+                else{
+                    m = mMap.addMarker(new MarkerOptions().position(new LatLng(Double.parseDouble(pm.lat), Double.parseDouble(pm.lng))).title(pm.name).snippet(snippet).icon(BitmapDescriptorFactory.fromResource(R.drawable.pin8)));
+                }
                 visiblePois.addMarkerAndPoi(m, pm);
             }
         }
@@ -1975,11 +2060,19 @@ public class UnifiedNavigationActivity extends SherlockFragmentActivity implemen
             FetchPoisByBuidTask fetchPoisByBuidFloorTask = new FetchPoisByBuidTask(new FetchPoisByBuidTask.FetchPoisListener() {
                 @Override
                 public void onSuccess(String result, Map<String, PoisModel> poisMap) {
-                    System.out.println(poisMap.toString());
+                    //System.out.println(poisMap.toString());
                     for(Map.Entry<String, PoisModel> entry:poisMap.entrySet()){
-                        if(entry.getValue().pois_type=="Beacon"){
-                            InstanceDataHolder.getInstance().beacons.put(entry.getValue().description,entry.getValue());
-                            //poisMap.remove(entry.getKey());
+                        if(entry.getValue().pois_type.equals("Beacon")){
+                            boolean exist = false;
+                            for(Map.Entry<PoisModel, ScanInstance> e : InstanceDataHolder.getInstance().beacons.entrySet()){
+                                if(e.getKey().description.equals(entry.getValue().description)){
+                                    exist = true;
+                                }
+                            }
+                            if(!exist){
+                                InstanceDataHolder.getInstance().beacons.put(entry.getValue(),null);
+                                System.out.println(InstanceDataHolder.getInstance().beacons.toString());
+                            }
                         }
                     }
                     mAnyplaceCache.setPois(poisMap, buid);

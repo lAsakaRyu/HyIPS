@@ -36,6 +36,10 @@
 
 package com.dmsl.airplace.algorithms;
 
+import com.dmsl.anyplace.InstanceDataHolder;
+import com.dmsl.anyplace.ble.ScanInstance;
+import com.dmsl.anyplace.nav.PoisModel;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -43,6 +47,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Map;
 
 public class Algorithms {
 
@@ -61,7 +66,6 @@ public class Algorithms {
 	 * @return the location of user
 	 */
 	public static String ProcessingAlgorithms(ArrayList<LogRecord> latestScanList, RadioMap RM, int algorithm_choice) {
-
 		int i, j;
 
 		ArrayList<String> MacAdressList = RM.getMacAdressList();
@@ -99,7 +103,7 @@ public class Algorithms {
 
 		if (parameter == null)
 			return null;
-
+		System.out.println("Algo");
 		switch (algorithm_choice) {
 
 		case 1:
@@ -111,11 +115,123 @@ public class Algorithms {
 		case 4:
 			return MAP_MMSE_Algorithm(RM, Observed_RSS_Values, parameter, true);
         case 5:
-            return KNN_WKNN_Algorithm(RM, Observed_RSS_Values, parameter, true);
+            int beaconActive = 0;
+            for(Map.Entry<PoisModel,ScanInstance> entry : InstanceDataHolder.getInstance().beacons.entrySet()){
+                if(entry.getValue() != null)
+                    beaconActive++;
+            }
+            if(beaconActive>=2)
+                return HYBRID_Algorithm(RM, Observed_RSS_Values, parameter);
+            else
+                return KNN_WKNN_Algorithm(RM, Observed_RSS_Values, parameter, true);
 		}
 		return null;
 
 	}
+
+    private static String HYBRID_Algorithm(RadioMap RM, ArrayList<String> Observed_RSS_Values, String parameter) {
+
+        ArrayList<String> RSS_Values;
+        float curResult = 0;
+        ArrayList<LocDistance> LocDistance_Results_List = new ArrayList<LocDistance>();
+        String myLocation = null;
+        int K;
+
+        try {
+            K = Integer.parseInt(parameter);
+        } catch (Exception e) {
+            return null;
+        }
+
+        // Construct a list with locations-distances pairs for currently
+        // observed RSS values
+        for (String location : RM.getLocationRSS_HashMap().keySet()) {
+            RSS_Values = RM.getLocationRSS_HashMap().get(location);
+            curResult = calculateEuclideanDistance(RSS_Values, Observed_RSS_Values);
+
+            if (curResult == Float.NEGATIVE_INFINITY)
+                return null;
+
+            LocDistance_Results_List.add(0, new LocDistance(curResult, location));
+        }
+        //TODO get latlng location to compare to beacons one.
+
+        // Sort locations-distances pairs based on minimum distances
+        Collections.sort(LocDistance_Results_List, new Comparator<LocDistance>() {
+
+            public int compare(LocDistance gd1, LocDistance gd2) {
+                return (gd1.getDistance() > gd2.getDistance() ? 1 : (gd1.getDistance() == gd2.getDistance() ? 0 : -1));
+            }
+        });
+
+        myLocation = calculateHybridKDistanceLocations(LocDistance_Results_List, K);
+
+        return myLocation;
+
+    }
+
+    public static String calculateHybridKDistanceLocations(ArrayList<LocDistance> LocDistance_Results_List, int K) {
+
+        double LocationWeight;
+        double sumWeights = 0.0f;
+        double WeightedSumX = 0.0f;
+        double WeightedSumY = 0.0f;
+
+        String[] LocationArray;
+        double x, y;
+
+        int K_Min = K < LocDistance_Results_List.size() ? K : LocDistance_Results_List.size();
+        for (int i = 0; i < K_Min; ++i) {
+            if (LocDistance_Results_List.get(i).getDistance() != 0.0) {
+                LocationWeight = 1 / LocDistance_Results_List.get(i).getDistance();
+            } else {
+                LocationWeight = 100;
+            }
+            LocationArray = LocDistance_Results_List.get(i).getLocation().split(" ");
+
+            try {
+                x = Float.valueOf(LocationArray[0].trim()).floatValue();
+                y = Float.valueOf(LocationArray[1].trim()).floatValue();
+            } catch (Exception e) {
+                return null;
+            }
+
+            sumWeights += LocationWeight;
+            WeightedSumX += LocationWeight * x;
+            WeightedSumY += LocationWeight * y;
+
+        }
+
+        for (int i = 0; i < K_Min; ++i) {
+            LocationArray = LocDistance_Results_List.get(i).getLocation().split(" ");
+
+            try {
+                x = Double.valueOf(LocationArray[0].trim());
+                y = Double.valueOf(LocationArray[1].trim());
+            } catch (Exception e) {
+                return null;
+            }
+            Map.Entry<PoisModel,ScanInstance> closestBeacon = InstanceDataHolder.getInstance().getClosestBeacon();
+            double distanceFromBeacon = closestBeacon.getValue().getEstimatedDistance();
+            double distanceToBeacon = InstanceDataHolder.getInstance().distanceTo(closestBeacon,x,y);
+            double difference = Math.abs(distanceFromBeacon-distanceToBeacon);
+            if (difference != 0.0) {
+                LocationWeight = 1 / difference;
+            } else {
+                LocationWeight = 100;
+            }
+
+            sumWeights += LocationWeight;
+            WeightedSumX += LocationWeight * x;
+            WeightedSumY += LocationWeight * y;
+
+        }
+
+        WeightedSumX /= sumWeights;
+        WeightedSumY /= sumWeights;
+
+        return WeightedSumX + " " + WeightedSumY;
+    }
 
 	/**
 	 * Calculates user location based on Weighted/Not Weighted K Nearest
@@ -152,13 +268,11 @@ public class Algorithms {
 		for (String location : RM.getLocationRSS_HashMap().keySet()) {
 			RSS_Values = RM.getLocationRSS_HashMap().get(location);
 			curResult = calculateEuclideanDistance(RSS_Values, Observed_RSS_Values);
-
 			if (curResult == Float.NEGATIVE_INFINITY)
 				return null;
-
 			LocDistance_Results_List.add(0, new LocDistance(curResult, location));
 		}
-        //TODO get latlng location to compare to beacons one.
+
 		// Sort locations-distances pairs based on minimum distances
 		Collections.sort(LocDistance_Results_List, new Comparator<LocDistance>() {
 
@@ -544,8 +658,10 @@ public class Algorithms {
 		} else if (algorithm_choice == 4) {
 			// && ("MMSE")
 			parameter = K;
-		}
-
+		}else if (algorithm_choice == 5) {
+            // && ("MMSE")
+            parameter = K;
+        }
 		return parameter;
 	}
 

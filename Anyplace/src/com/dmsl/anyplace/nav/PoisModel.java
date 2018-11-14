@@ -64,7 +64,7 @@ public class PoisModel implements Serializable, IPoisClass {
 				", floor_number='" + floor_number + '\'' +
 				", pois_type='" + pois_type + '\'' +
 				", is_building_entrance=" + is_building_entrance +
-				'}'+"\n";
+				'}';
 	}
 
 	@Override

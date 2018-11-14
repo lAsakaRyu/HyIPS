@@ -80,4 +80,7 @@ public class VisibleObject<T> {
 		mMarkersToPoi.put(m, pm);
 	}
 
+	public void removeMarker(Marker m){
+	    mMarkersToPoi.remove(m);
+    }
 }
