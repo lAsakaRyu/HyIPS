@@ -49,7 +49,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Map;
 
-import static java.lang.Math.log;
+import static java.lang.Math.sqrt;
 
 public class  Algorithms {
 
@@ -165,7 +165,8 @@ public class  Algorithms {
                 return (gd1.getDistance() > gd2.getDistance() ? 1 : (gd1.getDistance() == gd2.getDistance() ? 0 : -1));
             }
         });
-
+        K = (int)Math.round(sqrt((double)LocDistance_Results_List.size()));
+        System.out.println("K is "+K);
         myLocation = calculateHybridKDistanceLocations(LocDistance_Results_List, K);
 
         return myLocation;
@@ -217,7 +218,8 @@ public class  Algorithms {
             double distanceFromBeacon = closestBeacon.getValue().getEstimatedDistance();
             double distanceToBeacon = InstanceDataHolder.getInstance().distanceTo(closestBeacon,x,y);
             double difference = Math.abs(distanceFromBeacon-distanceToBeacon);
-            if (difference != 0.0) {
+            System.out.println("Difference is "+difference);
+            if (difference >= 0.05) {
                 LocationWeight = 1 / difference;
             } else {
                 LocationWeight = 100;
@@ -385,7 +387,7 @@ public class  Algorithms {
 			// do the procedure
 			finalResult += temp;
 		}
-		return ((float) Math.sqrt(finalResult));
+		return ((float) sqrt(finalResult));
 	}
 
 	/**
