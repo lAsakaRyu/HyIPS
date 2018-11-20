@@ -496,7 +496,7 @@ public class UnifiedNavigationActivity extends SherlockFragmentActivity implemen
                             System.out.println("MAC Address = " + entry.getValue().getBluetoothDevice().getAddress() + " TX Power = " + entry.getValue().getTxPower() + " RSSI = " + entry.getValue().getRssi() + " Distance(m) = " + entry.getValue().getEstimatedDistance()+"m" + " Closest beacon = "+InstanceDataHolder.getInstance().getClosestBeacon().getKey().description);
                         }
                     }
-//                    if(device.getAddress().contains("00:A0:50")){
+//                    if(true){
 //                        byte txpw = scanRecord[29];
 //                        double distance = (double)Math.round((Math.pow(10d, ((double) (int)txpw - rssi) / (10 * 2))) * 100) / 100;
 //                        System.out.println("MAC Address = " + device.getAddress() + " TX Power = " + (int)txpw + " RSSI = " + rssi + " Distance(m) = " + distance+"m");
@@ -2043,6 +2043,9 @@ public class UnifiedNavigationActivity extends SherlockFragmentActivity implemen
                 Marker m;
                 if(pm.pois_type.equals("Beacon")){
                     m = mMap.addMarker(new MarkerOptions().position(new LatLng(Double.parseDouble(pm.lat), Double.parseDouble(pm.lng))).title(pm.name).snippet(snippet).icon(BitmapDescriptorFactory.fromResource(R.drawable.pinbeaconoff)));
+                }
+                else if(pm.is_building_entrance){
+                    m = mMap.addMarker(new MarkerOptions().position(new LatLng(Double.parseDouble(pm.lat), Double.parseDouble(pm.lng))).title(pm.name).snippet(snippet).icon(BitmapDescriptorFactory.fromResource(R.drawable.pin9)));
                 }
                 else{
                     m = mMap.addMarker(new MarkerOptions().position(new LatLng(Double.parseDouble(pm.lat), Double.parseDouble(pm.lng))).title(pm.name).snippet(snippet).icon(BitmapDescriptorFactory.fromResource(R.drawable.pin8)));

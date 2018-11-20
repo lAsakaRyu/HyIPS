@@ -43,7 +43,7 @@ public class ScanInstance{
     }
 
     public int getTxPower() {
-        return scanrecord[29];
+        return -61;
     }
 
     public Calendar getTimeRecieved() {

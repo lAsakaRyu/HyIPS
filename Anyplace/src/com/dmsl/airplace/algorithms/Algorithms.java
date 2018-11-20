@@ -49,7 +49,9 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Map;
 
-public class Algorithms {
+import static java.lang.Math.log;
+
+public class  Algorithms {
 
 	final static String K = "4";
 
@@ -103,7 +105,7 @@ public class Algorithms {
 
 		if (parameter == null)
 			return null;
-		System.out.println("Algo");
+		//System.out.println("Algo");
 		switch (algorithm_choice) {
 
 		case 1:
@@ -181,26 +183,26 @@ public class Algorithms {
         double x, y;
 
         int K_Min = K < LocDistance_Results_List.size() ? K : LocDistance_Results_List.size();
-        for (int i = 0; i < K_Min; ++i) {
-            if (LocDistance_Results_List.get(i).getDistance() != 0.0) {
-                LocationWeight = 1 / LocDistance_Results_List.get(i).getDistance();
-            } else {
-                LocationWeight = 100;
-            }
-            LocationArray = LocDistance_Results_List.get(i).getLocation().split(" ");
-
-            try {
-                x = Float.valueOf(LocationArray[0].trim()).floatValue();
-                y = Float.valueOf(LocationArray[1].trim()).floatValue();
-            } catch (Exception e) {
-                return null;
-            }
-
-            sumWeights += LocationWeight;
-            WeightedSumX += LocationWeight * x;
-            WeightedSumY += LocationWeight * y;
-
-        }
+//        for (int i = 0; i < K_Min; ++i) {
+//            if (LocDistance_Results_List.get(i).getDistance() != 0.0) {
+//                LocationWeight = 1 / LocDistance_Results_List.get(i).getDistance();
+//            } else {
+//                LocationWeight = 100;
+//            }
+//            LocationArray = LocDistance_Results_List.get(i).getLocation().split(" ");
+//
+//            try {
+//                x = Float.valueOf(LocationArray[0].trim()).floatValue();
+//                y = Float.valueOf(LocationArray[1].trim()).floatValue();
+//            } catch (Exception e) {
+//                return null;
+//            }
+//
+//            sumWeights += LocationWeight;
+//            WeightedSumX += LocationWeight * x;
+//            WeightedSumY += LocationWeight * y;
+//
+//        }
 
         for (int i = 0; i < K_Min; ++i) {
             LocationArray = LocDistance_Results_List.get(i).getLocation().split(" ");
