@@ -122,7 +122,7 @@ public class  Algorithms {
                 if(entry.getValue() != null)
                     beaconActive++;
             }
-            if(beaconActive>=2)
+            if(beaconActive>=1)
                 return HYBRID_Algorithm(RM, Observed_RSS_Values, parameter);
             else
                 return KNN_WKNN_Algorithm(RM, Observed_RSS_Values, parameter, true);
@@ -139,12 +139,6 @@ public class  Algorithms {
         String myLocation = null;
         int K;
 
-        try {
-            K = Integer.parseInt(parameter);
-        } catch (Exception e) {
-            return null;
-        }
-
         // Construct a list with locations-distances pairs for currently
         // observed RSS values
         for (String location : RM.getLocationRSS_HashMap().keySet()) {
@@ -156,7 +150,6 @@ public class  Algorithms {
 
             LocDistance_Results_List.add(0, new LocDistance(curResult, location));
         }
-        //TODO get latlng location to compare to beacons one.
 
         // Sort locations-distances pairs based on minimum distances
         Collections.sort(LocDistance_Results_List, new Comparator<LocDistance>() {
@@ -170,7 +163,6 @@ public class  Algorithms {
         myLocation = calculateHybridKDistanceLocations(LocDistance_Results_List, K);
 
         return myLocation;
-
     }
 
     public static String calculateHybridKDistanceLocations(ArrayList<LocDistance> LocDistance_Results_List, int K) {
