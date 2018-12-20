@@ -1,3 +1,2 @@
 include ':Anyplace', ':library', 'BLE'
-include ':google-play-services_lib'
 include ':actionbarsherlock'
